@@ -25,12 +25,14 @@ public class AzureClientAssertionTest {
 		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
 		final var jwtIssuer = "Sample Issuer";
 		final var jwtSubject = "Sample Subject";
+		final var jwtAudience = "Sample Audience";
 		final var jwtTimeToLive = 800000;
 
 		final var jwt = AzureClientAssertion.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
+				jwtAudience, // claim = aud
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 
@@ -68,12 +70,14 @@ public class AzureClientAssertionTest {
 		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
 		final var jwtIssuer = "Sample Issuer";
 		final var jwtSubject = "Sample Subject";
+		final var jwtAudience = "Sample Audience";
 		final var jwtTimeToLive = 800000;
 
 		final var jwt = AzureClientAssertion.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
+				jwtAudience, // claim = aud
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 

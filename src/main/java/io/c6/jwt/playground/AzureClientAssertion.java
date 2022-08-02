@@ -9,7 +9,6 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -72,31 +71,42 @@ public class AzureClientAssertion {
 	/**
 	 * Sample method to construct a JWT token
 	 *
-	 * @param id        claim jti
+	 * @param id     claim jti
 	 * @param issuer    claim iss
 	 * @param subject   claim sub
 	 * @param ttlMillis TTL millis
 	 * @return JWT token
 	 */
-	public static String createJWT(final String id, final String issuer, final String subject, final long ttlMillis) {
+	public static String createJWT(
+			final String id,
+			final String issuer,
+			final String subject,
+			final String audience,
+			final long ttlMillis) {
 
 		final var nowMillis = System.currentTimeMillis();
 		final var now = new Date(nowMillis);
 		final var exp = ttlMillis >= 0 ? new Date(nowMillis + ttlMillis) : null;
 
+		// https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#header
 		final Map<String, Object> header = Map.of(
 				JwsHeader.ALGORITHM, SignatureAlgorithm.RS256.name(),
 				JwsHeader.TYPE, JwsHeader.JWT_TYPE,
 				JwsHeader.X509_CERT_SHA1_THUMBPRINT, encodedThumbprint
 		);
+
+		// https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#claims-payload
 		return Jwts.builder()
-				// Set the JWT Claims
-				.setId(id)
-				.setIssuedAt(now)
-				.setExpiration(exp)
-				.setSubject(subject)
-				.setIssuer(issuer)
+				// Set the JWT Headers
 				.setHeader(header)
+				// Set the JWT Claims
+				.setAudience(audience)
+				.setExpiration(exp)
+				.setIssuer(issuer)
+				.setId(id)
+				.setNotBefore(now)
+				.setSubject(subject)
+				.setIssuedAt(now)
 				// Sign with private key
 				.signWith(privateKey, SignatureAlgorithm.RS256)
 				// Build the JWT and serializes it to a compact, URL-safe string
