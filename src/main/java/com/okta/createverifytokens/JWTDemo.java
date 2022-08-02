@@ -50,7 +50,7 @@ public class JWTDemo {
 				.setIssuedAt(now)
 				.setSubject(subject)
 				.setIssuer(issuer)
-				.signWith(signatureAlgorithm, signingKey);
+				.signWith(signingKey, signatureAlgorithm);
 
 		// if it has been specified, let's add the expiration
 		if (ttlMillis >= 0) {
@@ -66,8 +66,8 @@ public class JWTDemo {
 	public static Claims decodeJWT(final String jwt) {
 
 		// This line will throw an exception if it is not a signed JWS (as expected)
-		return Jwts.parser()
-				.setSigningKey(DatatypeConverter.parseBase64Binary(SECRET_KEY))
+		return Jwts.parserBuilder()
+				.setSigningKey(DatatypeConverter.parseBase64Binary(SECRET_KEY)).build()
 				.parseClaimsJws(jwt).getBody();
 	}
 
