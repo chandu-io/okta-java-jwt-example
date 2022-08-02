@@ -31,7 +31,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 /**
  * Our simple class that demonstrates how to create and decode JWTs
  */
-public class AzureClientAssertion {
+public class JWTSignWithRS256AlgoDemo {
 
 	private static final String RES_NAME = "base64-encoded-pfx-file-content.dat";
 

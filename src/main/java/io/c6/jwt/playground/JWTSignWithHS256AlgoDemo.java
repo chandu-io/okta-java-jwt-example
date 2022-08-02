@@ -20,7 +20,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 /**
  * Our simple class that demonstrates how to create and decode JWTs
  */
-public class JWTDemo {
+public class JWTSignWithHS256AlgoDemo {
 
 	private static final String RES_NAME = "base64-encoded-cer-file-content.dat";
 

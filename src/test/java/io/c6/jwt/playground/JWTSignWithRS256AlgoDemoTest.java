@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 
-public class JWTDemoTest {
+public class JWTSignWithRS256AlgoDemoTest {
 
 	private static final Logger logger = LogManager.getLogger();
 
@@ -25,18 +25,20 @@ public class JWTDemoTest {
 		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
 		final var jwtIssuer = "Sample Issuer";
 		final var jwtSubject = "Sample Subject";
+		final var jwtAudience = "Sample Audience";
 		final var jwtTimeToLive = 800000;
 
-		final var jwt = JWTDemo.createJWT(
+		final var jwt = JWTSignWithRS256AlgoDemo.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
+				jwtAudience, // claim = aud
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 
 		logger.info(format("jwt = \"{0}\"", jwt));
 
-		final var claims = JWTDemo.decodeJWT(jwt);
+		final var claims = JWTSignWithRS256AlgoDemo.decodeJWT(jwt);
 
 		logger.info(format("claims = {0}", claims));
 
@@ -55,7 +57,7 @@ public class JWTDemoTest {
 		final var notAJwt = "This is not a JWT";
 
 		// This will fail with expected exception listed above
-		assertThrows(MalformedJwtException.class, () -> JWTDemo.decodeJWT(notAJwt));
+		assertThrows(MalformedJwtException.class, () -> JWTSignWithRS256AlgoDemo.decodeJWT(notAJwt));
 
 	}
 
@@ -68,12 +70,14 @@ public class JWTDemoTest {
 		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
 		final var jwtIssuer = "Sample Issuer";
 		final var jwtSubject = "Sample Subject";
+		final var jwtAudience = "Sample Audience";
 		final var jwtTimeToLive = 800000;
 
-		final var jwt = JWTDemo.createJWT(
+		final var jwt = JWTSignWithRS256AlgoDemo.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
+				jwtAudience, // claim = aud
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 
@@ -89,7 +93,7 @@ public class JWTDemoTest {
 		assertNotEquals(jwt, tamperedJwt);
 
 		// this will fail with a SignatureException
-		assertThrows(SignatureException.class, () -> JWTDemo.decodeJWT(tamperedJwt));
+		assertThrows(SignatureException.class, () -> JWTSignWithRS256AlgoDemo.decodeJWT(tamperedJwt));
 
 	}
 
