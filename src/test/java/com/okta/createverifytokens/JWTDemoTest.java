@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 
@@ -23,12 +22,12 @@ public class JWTDemoTest {
 	@Test
 	public void createAndDecodeJWT() {
 
-		String jwtId = "SOMEID1234";
-		String jwtIssuer = "JWT Demo";
-		String jwtSubject = "Andrew";
-		int jwtTimeToLive = 800000;
+		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
+		final var jwtIssuer = "Sample Issuer";
+		final var jwtSubject = "Sample Subject";
+		final var jwtTimeToLive = 800000;
 
-		String jwt = JWTDemo.createJWT(
+		final var jwt = JWTDemo.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
@@ -37,7 +36,7 @@ public class JWTDemoTest {
 
 		logger.info(format("jwt = \"{0}\"", jwt));
 
-		Claims claims = JWTDemo.decodeJWT(jwt);
+		final var claims = JWTDemo.decodeJWT(jwt);
 
 		logger.info(format("claims = {0}", claims));
 
@@ -53,7 +52,7 @@ public class JWTDemoTest {
 	@Test
 	public void decodeShouldFail() {
 
-		String notAJwt = "This is not a JWT";
+		final var notAJwt = "This is not a JWT";
 
 		// This will fail with expected exception listed above
 		assertThrows(MalformedJwtException.class, () -> JWTDemo.decodeJWT(notAJwt));
@@ -66,12 +65,12 @@ public class JWTDemoTest {
 	@Test
 	public void createAndDecodeTamperedJWT() {
 
-		String jwtId = "SOMEID1234";
-		String jwtIssuer = "JWT Demo";
-		String jwtSubject = "Andrew";
-		int jwtTimeToLive = 800000;
+		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
+		final var jwtIssuer = "Sample Issuer";
+		final var jwtSubject = "Sample Subject";
+		final var jwtTimeToLive = 800000;
 
-		String jwt = JWTDemo.createJWT(
+		final var jwt = JWTDemo.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
@@ -81,18 +80,15 @@ public class JWTDemoTest {
 		logger.info(format("jwt = \"{0}\"", jwt));
 
 		// tamper with the JWT
-
-		StringBuilder stringBuilder = new StringBuilder(jwt);
+		final var stringBuilder = new StringBuilder(jwt);
 		stringBuilder.setCharAt(22, 'I');
-
-		String tamperedJwt = stringBuilder.toString();
+		final var tamperedJwt = stringBuilder.toString();
 
 		logger.info(format("tamperedJwt = \"{0}\"", tamperedJwt));
 
 		assertNotEquals(jwt, tamperedJwt);
 
 		// this will fail with a SignatureException
-
 		assertThrows(SignatureException.class, () -> JWTDemo.decodeJWT(tamperedJwt));
 
 	}

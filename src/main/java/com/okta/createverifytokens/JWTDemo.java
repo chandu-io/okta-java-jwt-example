@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -24,51 +22,63 @@ public class JWTDemo {
 
 	static {
 		try {
-			SECRET_KEY = Files
-					.readAllLines(Paths.get(ClassLoader.getSystemResource("secret-key.dat").toURI()))
-					.get(0);
+			final var resourcePath = Paths.get(ClassLoader.getSystemResource("secret-key.dat").toURI());
+			SECRET_KEY = Files.readAllLines(resourcePath).get(0);
 		} catch (final IOException | URISyntaxException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	// Sample method to construct a JWT
+	private static byte[] getSecretKey() {
+		return Base64.getDecoder().decode(SECRET_KEY);
+	}
+
+	/**
+	 * Sample method to construct a JWT token
+ 	 * @param id claim jti
+	 * @param issuer claim iss
+	 * @param subject claim sub
+	 * @param ttlMillis TTL millis
+	 * @return JWT token
+	 */
 	public static String createJWT(final String id, final String issuer, final String subject, final long ttlMillis) {
 
 		// The JWT signature algorithm we will be using to sign the token
-		SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-
-		final long nowMillis = System.currentTimeMillis();
-		final Date now = new Date(nowMillis);
+		final var signatureAlgorithm = SignatureAlgorithm.HS256;
 
 		// We will sign our JWT with our ApiKey secret
-		final byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary(SECRET_KEY);
-		final Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
+		final var signingKey = new SecretKeySpec(getSecretKey(), signatureAlgorithm.getJcaName());
 
-		// Let's set the JWT Claims
-		final JwtBuilder builder = Jwts.builder().setId(id)
+		final var nowMillis = System.currentTimeMillis();
+		final var now = new Date(nowMillis);
+		final var exp = ttlMillis >= 0 ? new Date(nowMillis + ttlMillis) : null;
+
+		return Jwts.builder()
+				// Set the JWT Claims
+				.setId(id)
 				.setIssuedAt(now)
+				.setExpiration(exp)
 				.setSubject(subject)
 				.setIssuer(issuer)
-				.signWith(signingKey, signatureAlgorithm);
-
-		// if it has been specified, let's add the expiration
-		if (ttlMillis >= 0) {
-			final long expMillis = nowMillis + ttlMillis;
-			final Date exp = new Date(expMillis);
-			builder.setExpiration(exp);
-		}
-
-		// Builds the JWT and serializes it to a compact, URL-safe string
-		return builder.compact();
+				// Sign with key
+				.signWith(signingKey, signatureAlgorithm)
+				// Build the JWT and serializes it to a compact, URL-safe string
+				.compact();
 	}
 
+	/**
+	 * Sample method to decode a JWT token
+	 * @param jwt token string
+	 * @return decoded claims
+	 */
 	public static Claims decodeJWT(final String jwt) {
 
-		// This line will throw an exception if it is not a signed JWS (as expected)
 		return Jwts.parserBuilder()
-				.setSigningKey(DatatypeConverter.parseBase64Binary(SECRET_KEY)).build()
-				.parseClaimsJws(jwt).getBody();
+				.setSigningKey(getSecretKey())
+				.build()
+				// This line will throw an exception if it is not a signed JWS (as expected)
+				.parseClaimsJws(jwt)
+				.getBody();
 	}
 
 }
