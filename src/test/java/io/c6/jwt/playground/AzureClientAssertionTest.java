@@ -1,4 +1,4 @@
-package com.okta.createverifytokens;
+package io.c6.jwt.playground;
 
 import static java.text.MessageFormat.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 
-public class JWTDemoTest {
+public class AzureClientAssertionTest {
 
 	private static final Logger logger = LogManager.getLogger();
 
@@ -27,7 +27,7 @@ public class JWTDemoTest {
 		final var jwtSubject = "Sample Subject";
 		final var jwtTimeToLive = 800000;
 
-		final var jwt = JWTDemo.createJWT(
+		final var jwt = AzureClientAssertion.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
@@ -36,7 +36,7 @@ public class JWTDemoTest {
 
 		logger.info(format("jwt = \"{0}\"", jwt));
 
-		final var claims = JWTDemo.decodeJWT(jwt);
+		final var claims = AzureClientAssertion.decodeJWT(jwt);
 
 		logger.info(format("claims = {0}", claims));
 
@@ -55,7 +55,7 @@ public class JWTDemoTest {
 		final var notAJwt = "This is not a JWT";
 
 		// This will fail with expected exception listed above
-		assertThrows(MalformedJwtException.class, () -> JWTDemo.decodeJWT(notAJwt));
+		assertThrows(MalformedJwtException.class, () -> AzureClientAssertion.decodeJWT(notAJwt));
 
 	}
 
@@ -70,7 +70,7 @@ public class JWTDemoTest {
 		final var jwtSubject = "Sample Subject";
 		final var jwtTimeToLive = 800000;
 
-		final var jwt = JWTDemo.createJWT(
+		final var jwt = AzureClientAssertion.createJWT(
 				jwtId, // claim = jti
 				jwtIssuer, // claim = iss
 				jwtSubject, // claim = sub
@@ -89,7 +89,7 @@ public class JWTDemoTest {
 		assertNotEquals(jwt, tamperedJwt);
 
 		// this will fail with a SignatureException
-		assertThrows(SignatureException.class, () -> JWTDemo.decodeJWT(tamperedJwt));
+		assertThrows(SignatureException.class, () -> AzureClientAssertion.decodeJWT(tamperedJwt));
 
 	}
 

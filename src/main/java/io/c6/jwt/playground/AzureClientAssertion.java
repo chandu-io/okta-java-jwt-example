@@ -1,4 +1,4 @@
-package com.okta.createverifytokens;
+package io.c6.jwt.playground;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
