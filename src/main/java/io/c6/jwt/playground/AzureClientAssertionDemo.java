@@ -1,5 +1,7 @@
 package io.c6.jwt.playground;
 
+import static java.text.MessageFormat.format;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -15,6 +17,7 @@ import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
@@ -32,6 +35,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
  * Our simple class that demonstrates how to create and decode JWTs
  */
 public class AzureClientAssertionDemo {
+
+	public static final String AZURE_TOKEN_ENDPOINT_FMT = "https://login.windows.net/{0}/oauth2/token";
 
 	private static final String RES_NAME = "base64-encoded-pfx-file-content.dat";
 
@@ -77,12 +82,10 @@ public class AzureClientAssertionDemo {
 	 * @param ttlMillis TTL millis
 	 * @return JWT token
 	 */
-	public static String createJWT(
-			final String id,
-			final String issuer,
-			final String subject,
-			final String audience,
-			final long ttlMillis) {
+	public static String createJWT(final String tenantId, final String clientId, final long ttlMillis) {
+
+		final var id = UUID.randomUUID().toString();
+		final var audience = format(AZURE_TOKEN_ENDPOINT_FMT, tenantId);
 
 		final var nowMillis = System.currentTimeMillis();
 		final var now = new Date(nowMillis);
@@ -102,10 +105,10 @@ public class AzureClientAssertionDemo {
 				// Set the JWT Claims
 				.setAudience(audience)
 				.setExpiration(exp)
-				.setIssuer(issuer)
+				.setIssuer(clientId)
 				.setId(id)
 				.setNotBefore(now)
-				.setSubject(subject)
+				.setSubject(clientId)
 				.setIssuedAt(now)
 				// Sign with private key
 				.signWith(privateKey, SignatureAlgorithm.RS256)

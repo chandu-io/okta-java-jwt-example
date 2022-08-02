@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Duration;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -22,29 +24,21 @@ public class AzureClientAssertionDemoTest {
 	@Test
 	public void createAndDecodeJWT() {
 
-		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
-		final var jwtIssuer = "Sample Issuer";
-		final var jwtSubject = "Sample Subject";
-		final var jwtAudience = "Sample Audience";
-		final var jwtTimeToLive = 800000;
+		final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
+		final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
+		final var ttlMillis = Duration.ofMinutes(5).toMillis();
 
-		final var jwt = AzureClientAssertionDemo.createJWT(
-				jwtId, // claim = jti
-				jwtIssuer, // claim = iss
-				jwtSubject, // claim = sub
-				jwtAudience, // claim = aud
-				jwtTimeToLive // used to calculate expiration (claim = exp)
-		);
+		final var client_assertion = AzureClientAssertionDemo.createJWT(tenantId, clientId, ttlMillis);
 
-		logger.info(format("jwt = \"{0}\"", jwt));
+		logger.info(format("client_assertion = \"{0}\"", client_assertion));
 
-		final var claims = AzureClientAssertionDemo.decodeJWT(jwt);
+		final var claims = AzureClientAssertionDemo.decodeJWT(client_assertion);
 
 		logger.info(format("claims = {0}", claims));
 
-		assertEquals(jwtId, claims.getId());
-		assertEquals(jwtIssuer, claims.getIssuer());
-		assertEquals(jwtSubject, claims.getSubject());
+		assertEquals(format(AzureClientAssertionDemo.AZURE_TOKEN_ENDPOINT_FMT, tenantId), claims.getAudience());
+		assertEquals(clientId, claims.getIssuer());
+		assertEquals(clientId, claims.getSubject());
 
 	}
 
@@ -67,33 +61,25 @@ public class AzureClientAssertionDemoTest {
 	@Test
 	public void createAndDecodeTamperedJWT() {
 
-		final var jwtId = "e2f65951-6ff3-4792-932c-4ea8c27ba9e0";
-		final var jwtIssuer = "Sample Issuer";
-		final var jwtSubject = "Sample Subject";
-		final var jwtAudience = "Sample Audience";
-		final var jwtTimeToLive = 800000;
+		final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
+		final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
+		final var ttlMillis = Duration.ofMinutes(5).toMillis();
 
-		final var jwt = AzureClientAssertionDemo.createJWT(
-				jwtId, // claim = jti
-				jwtIssuer, // claim = iss
-				jwtSubject, // claim = sub
-				jwtAudience, // claim = aud
-				jwtTimeToLive // used to calculate expiration (claim = exp)
-		);
+		final var client_assertion = AzureClientAssertionDemo.createJWT(tenantId, clientId, ttlMillis);
 
-		logger.info(format("jwt = \"{0}\"", jwt));
+		logger.info(format("client_assertion = \"{0}\"", client_assertion));
 
 		// tamper with the JWT
-		final var stringBuilder = new StringBuilder(jwt);
+		final var stringBuilder = new StringBuilder(client_assertion);
 		stringBuilder.setCharAt(22, 'I');
-		final var tamperedJwt = stringBuilder.toString();
+		final var tampered_assertion = stringBuilder.toString();
 
-		logger.info(format("tamperedJwt = \"{0}\"", tamperedJwt));
+		logger.info(format("tampered_assertion = \"{0}\"", tampered_assertion));
 
-		assertNotEquals(jwt, tamperedJwt);
+		assertNotEquals(client_assertion, tampered_assertion);
 
 		// this will fail with a SignatureException
-		assertThrows(SignatureException.class, () -> AzureClientAssertionDemo.decodeJWT(tamperedJwt));
+		assertThrows(SignatureException.class, () -> AzureClientAssertionDemo.decodeJWT(tampered_assertion));
 
 	}
 
