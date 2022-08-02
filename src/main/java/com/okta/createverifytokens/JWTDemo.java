@@ -4,10 +4,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Base64;
+import java.security.Key;
 import java.util.Date;
 
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -18,36 +22,34 @@ import io.jsonwebtoken.SignatureAlgorithm;
  */
 public class JWTDemo {
 
-	private static final String SECRET_KEY;
+	private static final String RES_NAME = "base64-encoded-cer-file-content.dat";
+
+	private static final Logger logger = LogManager.getLogger();
+
+	private static final Key secretKey;
 
 	static {
 		try {
-			final var resourcePath = Paths.get(ClassLoader.getSystemResource("secret-key.dat").toURI());
-			SECRET_KEY = Files.readAllLines(resourcePath).get(0);
+			final var resourcePath = Paths.get(ClassLoader.getSystemResource(RES_NAME).toURI());
+			final var encodedKey = Files.readAllLines(resourcePath).get(0);
+			final var decodedKey = Base64.decodeBase64(encodedKey);
+			secretKey = new SecretKeySpec(decodedKey, SignatureAlgorithm.HS256.getJcaName());
 		} catch (final IOException | URISyntaxException e) {
+			logger.error(e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
 
-	private static byte[] getSecretKey() {
-		return Base64.getDecoder().decode(SECRET_KEY);
-	}
-
 	/**
 	 * Sample method to construct a JWT token
- 	 * @param id claim jti
-	 * @param issuer claim iss
-	 * @param subject claim sub
+	 *
+	 * @param id        claim jti
+	 * @param issuer    claim iss
+	 * @param subject   claim sub
 	 * @param ttlMillis TTL millis
 	 * @return JWT token
 	 */
 	public static String createJWT(final String id, final String issuer, final String subject, final long ttlMillis) {
-
-		// The JWT signature algorithm we will be using to sign the token
-		final var signatureAlgorithm = SignatureAlgorithm.HS256;
-
-		// We will sign our JWT with our ApiKey secret
-		final var signingKey = new SecretKeySpec(getSecretKey(), signatureAlgorithm.getJcaName());
 
 		final var nowMillis = System.currentTimeMillis();
 		final var now = new Date(nowMillis);
@@ -60,25 +62,25 @@ public class JWTDemo {
 				.setExpiration(exp)
 				.setSubject(subject)
 				.setIssuer(issuer)
-				// Sign with key
-				.signWith(signingKey, signatureAlgorithm)
+				// Sign with secret key
+				.signWith(secretKey, SignatureAlgorithm.HS256)
 				// Build the JWT and serializes it to a compact, URL-safe string
 				.compact();
 	}
 
 	/**
 	 * Sample method to decode a JWT token
+	 *
 	 * @param jwt token string
 	 * @return decoded claims
 	 */
 	public static Claims decodeJWT(final String jwt) {
 
 		return Jwts.parserBuilder()
-				.setSigningKey(getSecretKey())
+				.setSigningKey(secretKey)
 				.build()
 				// This line will throw an exception if it is not a signed JWS (as expected)
 				.parseClaimsJws(jwt)
 				.getBody();
 	}
-
 }
