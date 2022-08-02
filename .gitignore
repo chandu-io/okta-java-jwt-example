@@ -27,3 +27,5 @@
 /.nb-gradle/
 
 .DS_Store
+
+**/resources/secret-key.dat

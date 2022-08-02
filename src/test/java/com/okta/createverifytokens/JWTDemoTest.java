@@ -1,6 +1,9 @@
 package com.okta.createverifytokens;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static java.text.MessageFormat.format;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +19,7 @@ public class JWTDemoTest {
 
 	/**
 	 * Create a simple JWT, decode it, and assert the claims
- 	 */
+	 */
 	@Test
 	public void createAndDecodeJWT() {
 
@@ -32,11 +35,11 @@ public class JWTDemoTest {
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 
-		logger.info("jwt = \"" + jwt.toString() + "\"");
+		logger.info(format("jwt = \"{0}\"", jwt));
 
 		Claims claims = JWTDemo.decodeJWT(jwt);
 
-		logger.info("claims = " + claims.toString());
+		logger.info(format("claims = {0}", claims));
 
 		assertEquals(jwtId, claims.getId());
 		assertEquals(jwtIssuer, claims.getIssuer());
@@ -46,7 +49,7 @@ public class JWTDemoTest {
 
 	/**
 	 * Attempt to decode a bogus JWT and expect an exception
- 	 */
+	 */
 	@Test
 	public void decodeShouldFail() {
 
@@ -59,7 +62,7 @@ public class JWTDemoTest {
 
 	/**
 	 * Create a simple JWT, modify it, and try to decode it
- 	 */
+	 */
 	@Test
 	public void createAndDecodeTamperedJWT() {
 
@@ -75,20 +78,22 @@ public class JWTDemoTest {
 				jwtTimeToLive // used to calculate expiration (claim = exp)
 		);
 
-		logger.info("jwt = \"" + jwt.toString() + "\"");
+		logger.info(format("jwt = \"{0}\"", jwt));
 
 		// tamper with the JWT
 
-		StringBuilder tamperedJwt = new StringBuilder(jwt);
-		tamperedJwt.setCharAt(22, 'I');
+		StringBuilder stringBuilder = new StringBuilder(jwt);
+		stringBuilder.setCharAt(22, 'I');
 
-		logger.info("tamperedJwt = \"" + tamperedJwt.toString() + "\"");
+		String tamperedJwt = stringBuilder.toString();
 
-		assertNotEquals(jwt, tamperedJwt.toString());
+		logger.info(format("tamperedJwt = \"{0}\"", tamperedJwt));
+
+		assertNotEquals(jwt, tamperedJwt);
 
 		// this will fail with a SignatureException
 
-		assertThrows(SignatureException.class, () -> JWTDemo.decodeJWT(tamperedJwt.toString()));
+		assertThrows(SignatureException.class, () -> JWTDemo.decodeJWT(tamperedJwt));
 
 	}
 
