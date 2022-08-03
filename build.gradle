@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 version = '1.0.0'
-group = 'com.okta.createverifytokens'
+group = 'io.c6.jwt.playground'
 sourceCompatibility = 11
 
 repositories {
