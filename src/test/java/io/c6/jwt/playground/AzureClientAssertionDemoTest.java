@@ -17,29 +17,25 @@ import io.jsonwebtoken.SignatureException;
 public class AzureClientAssertionDemoTest {
 
 	private static final Logger logger = LogManager.getLogger();
+	private static final String azureTokenEndpointFmt = AzureClientAssertionDemo.AZURE_TOKEN_ENDPOINT_FMT_LIST.get(0);
+	private static final String tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
+	private static final String clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
+	private static final Duration assertionExpiration = Duration.ofMinutes(5);
 
 	/**
 	 * Create a simple JWT, decode it, and assert the claims
 	 */
 	@Test
 	public void createAndDecodeJWT() {
-
-		final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
-		final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
-		final var ttlMillis = Duration.ofMinutes(5).toMillis();
-
-		final var client_assertion = AzureClientAssertionDemo.createJWT(tenantId, clientId, ttlMillis);
-
+		final var client_assertion = AzureClientAssertionDemo.createJWT(azureTokenEndpointFmt, tenantId, clientId, assertionExpiration);
 		logger.info(format("client_assertion = \"{0}\"", client_assertion));
 
 		final var claims = AzureClientAssertionDemo.decodeJWT(client_assertion);
-
 		logger.info(format("claims = {0}", claims));
 
-		assertEquals(format(AzureClientAssertionDemo.AZURE_TOKEN_ENDPOINT_FMT, tenantId), claims.getAudience());
+		assertEquals(format(azureTokenEndpointFmt, tenantId), claims.getAudience());
 		assertEquals(clientId, claims.getIssuer());
 		assertEquals(clientId, claims.getSubject());
-
 	}
 
 	/**
@@ -47,12 +43,10 @@ public class AzureClientAssertionDemoTest {
 	 */
 	@Test
 	public void decodeShouldFail() {
-
 		final var notAJwt = "This is not a JWT";
 
 		// This will fail with expected exception listed above
 		assertThrows(MalformedJwtException.class, () -> AzureClientAssertionDemo.decodeJWT(notAJwt));
-
 	}
 
 	/**
@@ -60,27 +54,18 @@ public class AzureClientAssertionDemoTest {
 	 */
 	@Test
 	public void createAndDecodeTamperedJWT() {
-
-		final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
-		final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
-		final var ttlMillis = Duration.ofMinutes(5).toMillis();
-
-		final var client_assertion = AzureClientAssertionDemo.createJWT(tenantId, clientId, ttlMillis);
-
+		final var client_assertion = AzureClientAssertionDemo.createJWT(azureTokenEndpointFmt, tenantId, clientId, assertionExpiration);
 		logger.info(format("client_assertion = \"{0}\"", client_assertion));
 
 		// tamper with the JWT
 		final var stringBuilder = new StringBuilder(client_assertion);
 		stringBuilder.setCharAt(22, 'I');
 		final var tampered_assertion = stringBuilder.toString();
-
 		logger.info(format("tampered_assertion = \"{0}\"", tampered_assertion));
 
 		assertNotEquals(client_assertion, tampered_assertion);
-
 		// this will fail with a SignatureException
 		assertThrows(SignatureException.class, () -> AzureClientAssertionDemo.decodeJWT(tampered_assertion));
-
 	}
 
 }

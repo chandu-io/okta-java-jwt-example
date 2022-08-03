@@ -14,6 +14,9 @@ dependencies {
 
 	implementation 'commons-codec:commons-codec:1.15'
 
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.8.2'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.2'
+
 	implementation 'io.jsonwebtoken:jjwt-api:0.10.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.10.5',
 			// Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
