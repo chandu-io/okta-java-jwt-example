@@ -4,6 +4,7 @@ import static java.text.MessageFormat.format;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -65,6 +66,7 @@ public class AzureClientAssertionDemo {
 	private static final String JWT_BEARER_ASSERTION = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 	private static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
 	private static final String X_WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
+	private static final String V2 = "/v2.0";
 
 	private static final HttpClient httpClient = HttpClient.newHttpClient();
 	private static final ObjectMapper mapper = new ObjectMapper()
@@ -189,7 +191,7 @@ public class AzureClientAssertionDemo {
 					FORM_BODY_KEY_GRANT_TYPE, CLIENT_CREDENTIALS_GRANT_TYPE
 			);
 
-			if (azureTokenEndpointFmt.contains("v2.0")) {
+			if (azureTokenEndpointFmt.contains(V2)) {
 				body = new Hashtable<>(body);
 				body.put(FORM_BODY_KEY_SCOPE, MGMT_SCOPE);
 			}
@@ -302,7 +304,7 @@ public class AzureClientAssertionDemo {
 
 	public static void main(final String... args) {
 		try {
-			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(0);
+			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(2);
 			final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
 			final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
 			final var expiration = Duration.ofMinutes(5);
@@ -311,7 +313,16 @@ public class AzureClientAssertionDemo {
 					.get(timeout.toMinutes(), TimeUnit.MINUTES);
 			System.out.println(format("token={0}\n", token));
 
-			final var jwksUri = "https://login.microsoftonline.com/common/discovery/v2.0/keys";
+			final var endpoint = new URL(azureTokenEndpointFmt);
+			final var jwksUri = format(
+					"{0}://{1}{2}{3}/keys",
+					endpoint.getProtocol(),
+					endpoint.getHost(),
+					"/common/discovery",
+					azureTokenEndpointFmt.contains(V2) ? V2 : ""
+			);
+			System.out.println(format("jwksUri={0}\n", jwksUri));
+
 			final var signingKeyResolver = new AzureJWTSigningKeyResolver(jwksUri, timeout);
 			final var claims = Jwts.parser()
 					.setSigningKeyResolver(signingKeyResolver)
