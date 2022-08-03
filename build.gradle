@@ -7,27 +7,27 @@ group = 'com.okta.createverifytokens'
 sourceCompatibility = 11
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
 
-    implementation 'commons-codec:commons-codec:1.15'
+	implementation 'commons-codec:commons-codec:1.15'
 
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5',
-            // Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
-            //'org.bouncycastle:bcprov-jdk15on:1.70',
-            'io.jsonwebtoken:jjwt-jackson:0.11.5' // or 'io.jsonwebtoken:jjwt-gson:0.11.5' for gson
+	implementation 'io.jsonwebtoken:jjwt-api:0.10.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.10.5',
+			// Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
+			//'org.bouncycastle:bcprov-jdk15on:1.70',
+			'io.jsonwebtoken:jjwt-jackson:0.10.5' // or 'io.jsonwebtoken:jjwt-gson:0.11.5' for gson
 
-    implementation 'org.apache.logging.log4j:log4j-api:2.18.0'
-    implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
+	implementation 'org.apache.logging.log4j:log4j-api:2.18.0'
+	implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 
 }
 
 test {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }

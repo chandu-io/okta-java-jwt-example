@@ -124,9 +124,8 @@ public class AzureClientAssertionDemo {
 	 */
 	public static Claims decodeJWT(final String jwt) {
 
-		return Jwts.parserBuilder()
+		return Jwts.parser()
 				.setSigningKey(privateKey)
-				.build()
 				// This line will throw an exception if it is not a signed JWS (as expected)
 				.parseClaimsJws(jwt)
 				.getBody();

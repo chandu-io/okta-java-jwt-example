@@ -76,9 +76,8 @@ public class JWTSignWithHS256AlgoDemo {
 	 */
 	public static Claims decodeJWT(final String jwt) {
 
-		return Jwts.parserBuilder()
+		return Jwts.parser()
 				.setSigningKey(secretKey)
-				.build()
 				// This line will throw an exception if it is not a signed JWS (as expected)
 				.parseClaimsJws(jwt)
 				.getBody();
