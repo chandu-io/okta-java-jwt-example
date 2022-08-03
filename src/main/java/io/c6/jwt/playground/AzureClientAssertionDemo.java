@@ -21,6 +21,8 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -31,8 +33,9 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
@@ -62,17 +65,18 @@ public class AzureClientAssertionDemo {
 	private static final String JWT_BEARER_ASSERTION = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 	private static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
 	private static final String X_WWW_FORM_URLENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
-	private static final String RESPONSE_KEY_ACCESS_TOKEN = "access_token";
 
 	private static final HttpClient httpClient = HttpClient.newHttpClient();
-	private static final SimpleJsonMapper mapper = new SimpleJsonMapper();
+	private static final ObjectMapper mapper = new ObjectMapper()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+			.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
 
 	private static final Key privateKey;
 	private static final Certificate certificate;
 	private static final String encodedThumbprint;
 
 	static {
-		final var password = "".toCharArray();
+		final var password = "".toCharArray(); // TODO
 		try {
 			final var resourcePath = Paths.get(ClassLoader.getSystemResource(RES_NAME).toURI());
 			final var encodedKey = Files.readAllLines(resourcePath).get(0);
@@ -200,13 +204,13 @@ public class AzureClientAssertionDemo {
 
 			return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
 					.thenApply(HttpResponse::body)
-					.thenApply(mapper::readValue)
+					.thenApply(content -> unmarshall(content, AzureJWTResponse.class))
 					// Debugging
-					.thenApply(m -> {
-						System.out.println(format("response={0}\n", m));
-						return m;
+					.thenApply(response -> {
+						System.out.println(format("response={0}\n", response));
+						return response;
 					})
-					.thenApply(m -> m.get(RESPONSE_KEY_ACCESS_TOKEN));
+					.thenApply(AzureJWTResponse::getAccessToken);
 
 		} catch (final Exception e) {
 			throw new CompletionException(e);
@@ -219,18 +223,80 @@ public class AzureClientAssertionDemo {
 				.collect(Collectors.joining("&"));
 	}
 
-	/**
-	 * Simple implementation of ObjectMapper which can convert JSON string to map of key value pairs.
-	 */
-	static class SimpleJsonMapper extends ObjectMapper {
-		public Map<String, String> readValue(final String content) {
-			try {
-				final var typeReference = new TypeReference<>() {
-				};
-				return readValue(content, typeReference);
-			} catch (final Exception e) {
-				throw new CompletionException(e);
+	static <T> T unmarshall(final String content, final Class<T> cls) {
+		try {
+			return mapper.readValue(content, cls);
+		} catch (final Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	static final class AzureJWTResponse {
+		private String tokenType;
+		private String accessToken;
+		private int expiresIn;
+		private int extExpiresIn;
+
+		public String getTokenType() {
+			return tokenType;
+		}
+
+		public String getAccessToken() {
+			return accessToken;
+		}
+
+		public int getExpiresIn() {
+			return expiresIn;
+		}
+
+		public int getExtExpiresIn() {
+			return extExpiresIn;
+		}
+
+		public void setTokenType(final String tokenType) {
+			this.tokenType = tokenType;
+		}
+
+		public void setAccessToken(final String accessToken) {
+			this.accessToken = accessToken;
+		}
+
+		public void setExpiresIn(final int expiresIn) {
+			this.expiresIn = expiresIn;
+		}
+
+		public void setExtExpiresIn(final int extExpiresIn) {
+			this.extExpiresIn = extExpiresIn;
+		}
+
+		@Override
+		public String toString() {
+			return new StringJoiner(", ", AzureJWTResponse.class.getSimpleName() + "[", "]")
+					.add("tokenType='" + tokenType + "'")
+					.add("accessToken='" + accessToken + "'")
+					.add("expiresIn=" + expiresIn)
+					.add("extExpiresIn=" + extExpiresIn)
+					.toString();
+		}
+
+		@Override
+		public boolean equals(final Object o) {
+			if (this == o) {
+				return true;
 			}
+			if (o == null || getClass() != o.getClass()) {
+				return false;
+			}
+			final var that = (AzureJWTResponse) o;
+			return getExpiresIn() == that.getExpiresIn()
+					&& getExtExpiresIn() == that.getExtExpiresIn()
+					&& Objects.equals(getTokenType(), that.getTokenType())
+					&& Objects.equals(getAccessToken(), that.getAccessToken());
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(getTokenType(), getAccessToken(), getExpiresIn(), getExtExpiresIn());
 		}
 	}
 
@@ -245,11 +311,14 @@ public class AzureClientAssertionDemo {
 					.get(timeout.toMinutes(), TimeUnit.MINUTES);
 			System.out.println(format("token={0}\n", token));
 
-			final var parts = token.split("\\.");
-			final var header = new String(Base64.decodeBase64(parts[0]), StandardCharsets.UTF_8);
-			final var payload = new String(Base64.decodeBase64(parts[1]), StandardCharsets.UTF_8);
-			System.out.println(format("header={0}\n", header));
-			System.out.println(format("payload={0}\n", payload));
+			final var jwksUri = "https://login.microsoftonline.com/common/discovery/v2.0/keys";
+
+			final var claims = Jwts.parser()
+					.setSigningKeyResolver(new AzureJWTSigningKeyResolver(jwksUri))
+					.parseClaimsJws(token)
+					.getBody();
+			System.out.println(format("claims={0}\n", claims));
+
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
