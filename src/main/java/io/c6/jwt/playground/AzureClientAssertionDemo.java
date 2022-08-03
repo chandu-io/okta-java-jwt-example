@@ -312,9 +312,9 @@ public class AzureClientAssertionDemo {
 			System.out.println(format("token={0}\n", token));
 
 			final var jwksUri = "https://login.microsoftonline.com/common/discovery/v2.0/keys";
-
+			final var signingKeyResolver = new AzureJWTSigningKeyResolver(jwksUri, timeout);
 			final var claims = Jwts.parser()
-					.setSigningKeyResolver(new AzureJWTSigningKeyResolver(jwksUri))
+					.setSigningKeyResolver(signingKeyResolver)
 					.parseClaimsJws(token)
 					.getBody();
 			System.out.println(format("claims={0}\n", claims));

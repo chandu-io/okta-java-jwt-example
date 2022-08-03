@@ -35,18 +35,18 @@ public final class AzureJWTSigningKeyResolver extends SigningKeyResolverAdapter 
 			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 			.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
 
-	private static final Duration timeout = Duration.ofMinutes(2);
-
 	private final String jwksUri;
+	private final Duration timeout;
 
-	public AzureJWTSigningKeyResolver(final String jwksUri) {
+	public AzureJWTSigningKeyResolver(final String jwksUri, final Duration timeout) {
 		this.jwksUri = jwksUri;
+		this.timeout = timeout;
 	}
 
 	@Override
 	public Key resolveSigningKey(final JwsHeader header, final Claims claims) {
 		try {
-			final var decodedKey = getJWKS(jwksUri) // TODO: cache this
+			final var decodedKey = getJWKS(jwksUri, timeout) // TODO: cache this
 					.map(JWKS::getKeys)
 					.map(List::stream)
 					.map(s -> s.filter(jwk -> jwk != null && jwk.getKid() != null))
@@ -70,7 +70,7 @@ public final class AzureJWTSigningKeyResolver extends SigningKeyResolverAdapter 
 		}
 	}
 
-	public static Optional<JWKS> getJWKS(final String jwksUri) {
+	public static Optional<JWKS> getJWKS(final String jwksUri, final Duration timeout) {
 		try {
 			final var endpoint = new URI(jwksUri);
 			final var request = HttpRequest.newBuilder().uri(endpoint).GET().build();
