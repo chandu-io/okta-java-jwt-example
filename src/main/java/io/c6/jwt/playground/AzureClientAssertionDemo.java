@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +57,14 @@ public class AzureClientAssertionDemo {
 	private static final String RES_NAME = "base64-encoded-pfx-file-content.dat";
 	// https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#keystore-types
 	private static final String PKCS12 = "pkcs12";
+	private static final String FORM_BODY_KEY_RESOURCE = "resource";
 	private static final String FORM_BODY_KEY_SCOPE = "scope";
 	private static final String FORM_BODY_KEY_CLIENT_ID = "client_id";
 	private static final String FORM_BODY_KEY_CLIENT_ASSERTION_TYPE = "client_assertion_type";
 	private static final String FORM_BODY_KEY_CLIENT_ASSERTION = "client_assertion";
 	private static final String FORM_BODY_KEY_GRANT_TYPE = "grant_type";
-	private static final String MGMT_SCOPE = "https://management.core.windows.net/.default";
+	private static final String MGMT_RESOURCE = "https://management.core.windows.net/";
+	private static final String MGMT_SCOPE = MGMT_RESOURCE + ".default";
 	private static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
 	private static final String JWT_BEARER_ASSERTION = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 	private static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
@@ -185,16 +188,17 @@ public class AzureClientAssertionDemo {
 
 			final var endpoint = new URI(format(azureTokenEndpointFmt, tenantId));
 
-			var body = Map.of(
-					FORM_BODY_KEY_CLIENT_ID, clientId,
-					FORM_BODY_KEY_CLIENT_ASSERTION_TYPE, JWT_BEARER_ASSERTION,
-					FORM_BODY_KEY_CLIENT_ASSERTION, clientAssertion,
-					FORM_BODY_KEY_GRANT_TYPE, CLIENT_CREDENTIALS_GRANT_TYPE
-			);
+			var body = new HashMap<String, String>() {{
+				put(FORM_BODY_KEY_CLIENT_ID, clientId);
+				put(FORM_BODY_KEY_CLIENT_ASSERTION_TYPE, JWT_BEARER_ASSERTION);
+				put(FORM_BODY_KEY_CLIENT_ASSERTION, clientAssertion);
+				put(FORM_BODY_KEY_GRANT_TYPE, CLIENT_CREDENTIALS_GRANT_TYPE);
+			}};
 
 			if (azureTokenEndpointFmt.contains(V2)) {
-				body = new Hashtable<>(body);
 				body.put(FORM_BODY_KEY_SCOPE, MGMT_SCOPE);
+			} else {
+				body.put(FORM_BODY_KEY_RESOURCE, MGMT_RESOURCE);
 			}
 
 			final var formBody = toFormBody(body);
@@ -307,7 +311,7 @@ public class AzureClientAssertionDemo {
 
 	public static void main(final String... args) {
 		try {
-			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(2);
+			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(0);
 			final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
 			final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
 			final var expiration = Duration.ofMinutes(5);
