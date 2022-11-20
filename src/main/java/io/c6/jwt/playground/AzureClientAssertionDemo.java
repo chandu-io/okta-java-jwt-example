@@ -20,7 +20,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,8 +62,9 @@ public class AzureClientAssertionDemo {
 	private static final String FORM_BODY_KEY_CLIENT_ASSERTION_TYPE = "client_assertion_type";
 	private static final String FORM_BODY_KEY_CLIENT_ASSERTION = "client_assertion";
 	private static final String FORM_BODY_KEY_GRANT_TYPE = "grant_type";
-	private static final String MGMT_RESOURCE = "https://management.core.windows.net/";
-	private static final String MGMT_SCOPE = MGMT_RESOURCE + ".default";
+	private static final String MGMT_RESOURCE = "https://management.azure.com/";
+	// https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#trailing-slash-and-default
+	private static final String MGMT_SCOPE = MGMT_RESOURCE + "/.default";
 	private static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
 	private static final String JWT_BEARER_ASSERTION = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 	private static final String CLIENT_CREDENTIALS_GRANT_TYPE = "client_credentials";
@@ -81,15 +81,15 @@ public class AzureClientAssertionDemo {
 	private static final String encodedThumbprint;
 
 	static {
-		final var password = "".toCharArray(); // TODO
+		final var password = "".toCharArray(); // TODO: Extract as prop
 		try {
 			final var resourcePath = Paths.get(ClassLoader.getSystemResource(RES_NAME).toURI());
-			final var encodedKey = Files.readAllLines(resourcePath).get(0);
+			final var encodedKey = Files.readAllLines(resourcePath).get(0); // TODO: Extract as prop
 			final var decodedKey = Base64.decodeBase64(encodedKey);
 			final var keyStore = KeyStore.getInstance(PKCS12);
 			final var inputStream = new ByteArrayInputStream(decodedKey);
 			keyStore.load(inputStream, password);
-			final var alias = Collections.list(keyStore.aliases()).get(0);
+			final var alias = Collections.list(keyStore.aliases()).get(0); // TODO: Extract as prop
 			privateKey = keyStore.getKey(alias, password);
 			certificate = keyStore.getCertificate(alias);
 			final var thumbprint = DigestUtils.sha1Hex(certificate.getEncoded());
@@ -110,10 +110,11 @@ public class AzureClientAssertionDemo {
 	 * @return JWT token
 	 */
 	public static String createJWT(
-			final String azureTokenEndpointFmt,
-			final String tenantId,
-			final String clientId,
-			final Duration assertionExpiration) {
+			final String azureTokenEndpointFmt, // TODO: Extract as prop
+			final String tenantId, // TODO: Extract as prop
+			final String clientId, // TODO: Extract as prop
+			final Duration assertionExpiration // TODO: Extract as prop
+	) {
 
 		final var id = UUID.randomUUID().toString();
 		final var audience = format(azureTokenEndpointFmt, tenantId);
@@ -311,7 +312,7 @@ public class AzureClientAssertionDemo {
 
 	public static void main(final String... args) {
 		try {
-			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(0);
+			final var azureTokenEndpointFmt = AZURE_TOKEN_ENDPOINT_FMT_LIST.get(3);
 			final var tenantId = "03d449a5-f799-4eae-9828-4dc378a03128";
 			final var clientId = "672837ab-c9da-4602-95d7-553b87f3fc9b";
 			final var expiration = Duration.ofMinutes(5);
