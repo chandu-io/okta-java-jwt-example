@@ -122,6 +122,7 @@ public class AzureClientAssertionDemo {
 				: new Date(now.plus(assertionExpiration).toEpochMilli());
 
 		// https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#header
+		//noinspection DuplicatedCode
 		final Map<String, Object> header = Map.of(
 				JwsHeader.ALGORITHM, SignatureAlgorithm.RS256.name(),
 				JwsHeader.TYPE, JwsHeader.JWT_TYPE,
@@ -225,6 +226,7 @@ public class AzureClientAssertionDemo {
 				.collect(Collectors.joining("&"));
 	}
 
+	@SuppressWarnings("SameParameterValue")
 	static <T> T unmarshall(final String content, final Class<T> cls) {
 		try {
 			return mapper.readValue(content, cls);
@@ -233,6 +235,7 @@ public class AzureClientAssertionDemo {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static final class AzureJWTResponse {
 		private String tokenType;
 		private String accessToken;

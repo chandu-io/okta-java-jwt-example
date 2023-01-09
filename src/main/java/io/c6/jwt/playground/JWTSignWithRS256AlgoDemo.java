@@ -89,6 +89,7 @@ public class JWTSignWithRS256AlgoDemo {
 		final var exp = ttlMillis >= 0 ? new Date(nowMillis + ttlMillis) : null;
 
 		// https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials#header
+		//noinspection DuplicatedCode
 		final Map<String, Object> header = Map.of(
 				JwsHeader.ALGORITHM, SignatureAlgorithm.RS256.name(),
 				JwsHeader.TYPE, JwsHeader.JWT_TYPE,

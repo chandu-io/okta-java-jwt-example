@@ -27,6 +27,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.SigningKeyResolverAdapter;
 
+@SuppressWarnings("ALL")
 public final class AzureJWTSigningKeyResolver extends SigningKeyResolverAdapter {
 
 	private static final Logger logger = LogManager.getLogger();
